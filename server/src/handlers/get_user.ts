@@ -1,7 +1,22 @@
+import { db } from '../db';
+import { usersTable } from '../db/schema';
+import { eq } from 'drizzle-orm';
 import { type User } from '../schema';
 
-export async function getUser(userId: string): Promise<User | null> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching a user by their ID from the database.
-    return null;
-}
+export const getUser = async (userId: string): Promise<User | null> => {
+  try {
+    const result = await db.select()
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .execute();
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    return result[0];
+  } catch (error) {
+    console.error('User fetch failed:', error);
+    throw error;
+  }
+};

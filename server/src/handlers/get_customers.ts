@@ -1,7 +1,20 @@
+import { db } from '../db';
+import { customersTable } from '../db/schema';
 import { type GetCustomersInput, type Customer } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export async function getCustomers(input: GetCustomersInput): Promise<Customer[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all customers for an organization.
-    return [];
-}
+export const getCustomers = async (input: GetCustomersInput): Promise<Customer[]> => {
+  try {
+    // Query customers for the specified organization
+    const results = await db.select()
+      .from(customersTable)
+      .where(eq(customersTable.organization_id, input.organization_id))
+      .execute();
+
+    // Return the results (no numeric conversions needed for customers table)
+    return results;
+  } catch (error) {
+    console.error('Get customers failed:', error);
+    throw error;
+  }
+};

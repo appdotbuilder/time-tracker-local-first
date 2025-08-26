@@ -1,17 +1,41 @@
+import { db } from '../db';
+import { projectsTable } from '../db/schema';
 import { type UpdateProjectInput, type Project } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export async function updateProject(input: UpdateProjectInput): Promise<Project> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is updating project information in the database.
-    return {
-        id: input.id,
-        name: input.name || 'Placeholder Project',
-        description: input.description || null,
-        customer_id: 'placeholder-customer-id',
-        organization_id: 'placeholder-org-id',
-        created_by: 'placeholder-user-id',
-        is_active: input.is_active ?? true,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as Project;
-}
+export const updateProject = async (input: UpdateProjectInput): Promise<Project> => {
+  try {
+    // Build update object with only provided fields
+    const updateData: Partial<typeof projectsTable.$inferInsert> = {
+      updated_at: new Date()
+    };
+
+    if (input.name !== undefined) {
+      updateData.name = input.name;
+    }
+
+    if (input.description !== undefined) {
+      updateData.description = input.description;
+    }
+
+    if (input.is_active !== undefined) {
+      updateData.is_active = input.is_active;
+    }
+
+    // Update project record
+    const result = await db.update(projectsTable)
+      .set(updateData)
+      .where(eq(projectsTable.id, input.id))
+      .returning()
+      .execute();
+
+    if (result.length === 0) {
+      throw new Error(`Project with id ${input.id} not found`);
+    }
+
+    return result[0];
+  } catch (error) {
+    console.error('Project update failed:', error);
+    throw error;
+  }
+};
